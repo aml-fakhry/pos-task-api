@@ -1,0 +1,15 @@
+{
+  "name": "pos-task-api",
+  "version": "1.0.0",
+  "description": "point of sale screen task",
+  "main": "app.js",
+  "scripts": {
+    "dev": "nodemon src/app.ts"
+  },
+  "author": "Amal Fakhri",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "nodemon": "^2.0.20"
+  }
+}
