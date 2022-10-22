@@ -5,6 +5,7 @@ const PORT = 5000;
 const app = express();
 
 app.use(cors());
+app.use(express.json({ limit: '16mb' }));
 app.get('/products', (req, res) => {
   const products = [
     { id: 1, name: 'كولا زيرو', price: 100 },
@@ -13,6 +14,13 @@ app.get('/products', (req, res) => {
   ];
   res.json(products);
 });
+
+app.post('/create-product-invoice', (req, res) => {
+  const products = req.body;
+  console.log({ products });
+  res.json(products);
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
