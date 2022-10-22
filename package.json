@@ -3,12 +3,14 @@
   "version": "1.0.0",
   "description": "point of sale screen task",
   "main": "app.js",
+  "type": "module",
   "scripts": {
-    "dev": "nodemon src/app.ts"
+    "start": "nodemon src/app.js"
   },
   "author": "Amal Fakhri",
   "license": "ISC",
   "dependencies": {
+    "cors": "^2.8.5",
     "express": "^4.18.2",
     "nodemon": "^2.0.20"
   }
