@@ -6,6 +6,7 @@ import util from 'util';
  */
 class Database {
   query;
+  getConnection;
 
   /**
    * Initial database connection.
@@ -19,10 +20,12 @@ class Database {
       database: process.env.DB_NAME,
     });
 
-    const connection = await util.promisify(pool.getConnection).bind(pool)();
+    this.getConnection = util.promisify(pool.getConnection).bind(pool);
 
+    const connection = await this.getConnection();
     console.log('Database connected successfully😎');
     connection.release();
+
     this.query = util.promisify(pool.query).bind(pool);
   }
 }
