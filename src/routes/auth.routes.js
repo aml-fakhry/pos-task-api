@@ -15,8 +15,7 @@ export const userRelativeRoute = '';
 
 /** Sign up new user. */
 userRouter.post('/signup', async (req, res) => {
-  const user = await authService.signup(req.body);
-  res.send(user);
+  const user = await authService.signup(res, req.body);
 });
 
 /* Login user. */

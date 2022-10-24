@@ -7,12 +7,11 @@ import { Hash } from '../shared/util/hash.util.js';
  */
 class authService {
   /** Sign up new user. */
-  async signup(data) {
-    const emailExistence = await Database.query(`SELECT email from user where email = '${data.email}';`);
+  async signup(res, data) {
+    const [emailExistence] = await Database.query('SELECT email from user where email  = ?', [data.email]);
 
     if (emailExistence.length) {
-      res.json('email exist before');
-      return;
+      return res.json('email exist before');
     }
 
     /**
@@ -21,14 +20,15 @@ class authService {
      */
     const hashPassword = await Hash.hash(data.password);
 
-    await Database.query(
-      `INSERT INTO user (name, email, password) VALUES ('${data.name}','${data.email}','${hashPassword}')`
-    );
+    const [insertUser] = await Database.execute('INSERT INTO user (name, email, password) VALUES (?, ?, ?)', [
+      data.name,
+      data.email,
+      hashPassword,
+    ]);
 
-    const [{ userId }] = await Database.query(`SELECT LAST_INSERT_ID() As userId;`);
-    const user = await Database.query(`SELECT * from user where id = ${userId};`);
+    const [user] = await Database.query('SELECT * from user where id = ?', [insertUser.insertId]);
 
-    return user;
+    return res.json(user[0]);
   }
 
   /** Login user method. */
