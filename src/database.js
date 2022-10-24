@@ -1,20 +1,32 @@
-import { createPool } from 'mysql';
-import util from 'util';
+import mysql from 'mysql2';
 
-const pool = createPool({
-  connectionLimit: 4,
-  host: 'sql8.freemysqlhosting.net',
-  user: 'sql8528599',
-  password: 'SghmUiTYa4',
-  database: 'sql8528599',
-});
+/**
+ * A Database class that is contain initial connection to database.
+ */
+class Database {
+  query;
+  execute;
+  /**
+   * Initial database connection.
+   */
+  async initDatabase() {
+    const pool = mysql.createPool({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      waitForConnections: true,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
+      connectionLimit: 4,
+      queueLimit: 0,
+    });
 
-pool.getConnection((err, connection) => {
-  if (err) throw err;
-  console.log('Database connected successfully');
-  connection.release();
-});
+    const promisePool = pool.promise();
 
-const query = util.promisify(pool.query).bind(pool);
+    console.log('Database connected successfully😎');
 
-export default { query };
+    this.query = promisePool.query.bind(promisePool);
+
+    this.execute = promisePool.execute.bind(promisePool);
+  }
+}
+export default new Database();

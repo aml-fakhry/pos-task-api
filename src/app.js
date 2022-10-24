@@ -3,88 +3,67 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 
 import Database from './database.js';
-import { Hash } from './shared/util/hash.util.js';
-import { JWT } from './shared/util/jwt.util.js';
-import { Authenticate } from './shared/middleware/auth.middleware.js';
-
-const PORT = 5000;
-const app = express();
+import { userRouter } from './routes/auth.routes.js';
+import { productRouter } from './routes/product.routes.js';
 
 dotenv.config();
+const PORT = process.env.PORT;
+const app = express();
 
-app.use(cors());
-app.use(express.json({ limit: '16mb' }));
-app.get('/products', Authenticate, async (req, res) => {
-  const products = await Database.query('SELECT * FROM product;');
-  res.json(products);
-});
-
-app.post('/create-product-invoice', Authenticate, async (req, res) => {
-  const invoices = req.body;
-  let total = 0;
-
-  console.log({ invoices });
-  invoices.forEach((invoice) => {
-    total += invoice.total;
-  });
-
-  await Database.query(`INSERT INTO invoice (total) VALUES (${total});`);
-
-  const [{ invoiceId }] = await Database.query(`SELECT LAST_INSERT_ID() AS invoiceId`);
-
-  console.log({ invoiceId });
-
-  for (const invoice of invoices) {
-    await Database.query(
-      `INSERT INTO invoice_product (invoice_id, product_id, total, quantity) VALUES (${invoiceId}, ${invoice.product.id},${invoice.total},${invoice.quantity})`
-    );
-  }
-
-  res.json(invoices);
-});
-
-app.post('/signup', async (req, res) => {
-  const data = req.body;
-
-  const emailExistence = await Database.query(`SELECT email from user where email = '${data.email}';`);
-
-  if (emailExistence.length) {
-    res.json('email exist before');
-    return;
-  }
+/**
+ * Sets the http-request options for an express server.
+ * @param app The express application to set its express server's request options.
+ */
+function setRequestOptions(app) {
+  /**
+   * Enable CORS to allow any javascript client to consume your server's api.
+   */
+  app.use(cors());
 
   /**
-   * Hash user's password.
-   * Set user object.
+   * Allow parse incoming requests as JSON payloads.
    */
-  const hashPassword = await Hash.hash(data.password);
+  app.use(express.json({ limit: '5mb' }));
 
-  await Database.query(
-    `INSERT INTO user (name, email, password) VALUES ('${data.name}','${data.email}','${hashPassword}')`
-  );
+  /**
+   * Allow parse incoming urlencoded requests bodies.
+   */
+  app.use(express.urlencoded({ limit: '5mb', extended: true }));
+}
 
-  const [{ userId }] = await Database.query(`SELECT LAST_INSERT_ID() As userId;`);
-  const user = await Database.query(`SELECT * from user where id = ${userId};`);
+function registerRoutes(app) {
+  /**
+   * The base-route prefix for the api.
+   *
+   * e.g. `/api/organizations`, `/api/products`.
+   */
+  const apiBaseRoute = '/api/';
 
-  res.send(user);
-});
+  app.use(apiBaseRoute, userRouter);
+  app.use(apiBaseRoute, productRouter);
+}
 
-app.post('/login', async (req, res) => {
-  const data = req.body;
-  console.log({ data });
+function setupServer(app) {
+  /**
+   * The order matters.
+   * 2. Set request options.
+   * 3. Register routes.
+   */
 
-  const [user] = await Database.query(`SELECT * from user where email = '${data.email}';`);
+  setRequestOptions(app);
+  registerRoutes(app);
+}
 
-  if (![user].length || !(await Hash.compare(req.body.password, user.password))) {
-    res.json('User not found');
-    return;
-  }
+/**
+ * Initial database connection.
+ * Starts an express server.
+ */
+async function startServer() {
+  await Database.initDatabase();
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
 
-  const jwt = await JWT.genToken(user.id ?? 0);
-
-  res.send({ data: { user: user, token: jwt } });
-});
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+setupServer(app);
+startServer();
