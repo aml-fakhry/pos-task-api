@@ -5,20 +5,21 @@ import Database from '../database.js';
  */
 class productService {
   async getAllProducts() {
-    return Database.query('SELECT * FROM product;');
+    const [products] = await Database.query('SELECT * FROM product;');
+    return products;
   }
 
   async insertInvoiceInDB(total) {
-    await Database.query(`INSERT INTO invoice (total) VALUES (${total});`);
+    /* use prepared statement to avoid sql injection */
+    const [insertInvoice] = await Database.execute('INSERT INTO invoice (total) VALUES (?)', [total]);
 
-    const [{ invoiceId }] = await Database.query(`SELECT LAST_INSERT_ID() AS invoiceId`);
-
-    return invoiceId;
+    return insertInvoice.insertId;
   }
 
   async linkInvoiceWithProduct(invoiceId, invoiceProduct) {
-    await Database.query(
-      `INSERT INTO invoice_product (invoice_id, product_id, total, quantity) VALUES (${invoiceId}, ${invoiceProduct.product.id},${invoiceProduct.total},${invoiceProduct.quantity})`
+    return Database.execute(
+      'INSERT INTO invoice_product (invoice_id, product_id, total, quantity) VALUES (?, ?, ?, ?)',
+      [invoiceId, invoiceProduct.product.id, invoiceProduct.total, invoiceProduct.quantity]
     );
   }
 

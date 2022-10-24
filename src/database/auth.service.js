@@ -33,9 +33,11 @@ class authService {
 
   /** Login user method. */
   async login(data) {
-    const [user] = await Database.query(`SELECT * from user where email = '${data.email}';`);
+    const [users] = await Database.query('SELECT * from user where email = ?', [data.email]);
 
-    if (![user].length || !(await Hash.compare(data.password, user.password))) {
+    const user = users[0];
+
+    if (!user || !(await Hash.compare(data.password, user.password))) {
       res.json('User not found');
       return;
     }
