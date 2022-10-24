@@ -3,8 +3,9 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 
 import Database from './database.js';
-import { Hash } from './util/hash.util.js';
-import { JWT } from './util/jwt.util.js';
+import { Hash } from './shared/util/hash.util.js';
+import { JWT } from './shared/util/jwt.util.js';
+import { Authenticate } from './shared/middleware/auth.middleware.js';
 
 const PORT = 5000;
 const app = express();
@@ -13,15 +14,16 @@ dotenv.config();
 
 app.use(cors());
 app.use(express.json({ limit: '16mb' }));
-app.get('/products', async (req, res) => {
+app.get('/products', Authenticate, async (req, res) => {
   const products = await Database.query('SELECT * FROM product;');
   res.json(products);
 });
 
-app.post('/create-product-invoice', async (req, res) => {
+app.post('/create-product-invoice', Authenticate, async (req, res) => {
   const invoices = req.body;
   let total = 0;
 
+  console.log({ invoices });
   invoices.forEach((invoice) => {
     total += invoice.total;
   });
@@ -38,7 +40,6 @@ app.post('/create-product-invoice', async (req, res) => {
     );
   }
 
-  console.log({ invoices });
   res.json(invoices);
 });
 
@@ -70,6 +71,7 @@ app.post('/signup', async (req, res) => {
 
 app.post('/login', async (req, res) => {
   const data = req.body;
+  console.log({ data });
 
   const [user] = await Database.query(`SELECT * from user where email = '${data.email}';`);
 
