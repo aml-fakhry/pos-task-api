@@ -81,7 +81,6 @@ app.post('/login', async (req, res) => {
   }
 
   const jwt = await JWT.genToken(user.id ?? 0);
-  const jwtData = await JWT.verifyAndDecode(jwt, true);
 
   res.send({ data: { user: user, token: jwt } });
 });
