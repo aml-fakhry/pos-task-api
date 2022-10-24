@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 
+dotenv.config();
+
 import Database from './database.js';
 import { Hash } from './shared/util/hash.util.js';
 import { JWT } from './shared/util/jwt.util.js';
@@ -10,10 +12,9 @@ import { Authenticate } from './shared/middleware/auth.middleware.js';
 const PORT = 5000;
 const app = express();
 
-dotenv.config();
-
 app.use(cors());
 app.use(express.json({ limit: '16mb' }));
+
 app.get('/products', Authenticate, async (req, res) => {
   const products = await Database.query('SELECT * FROM product;');
   res.json(products);
@@ -85,6 +86,15 @@ app.post('/login', async (req, res) => {
   res.send({ data: { user: user, token: jwt } });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+/**
+ * Initial database connection.
+ * Starts an express server.
+ */
+async function startServer() {
+  await Database.initDatabase();
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+startServer();

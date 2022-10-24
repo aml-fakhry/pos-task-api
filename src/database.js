@@ -1,20 +1,29 @@
 import { createPool } from 'mysql';
 import util from 'util';
 
-const pool = createPool({
-  connectionLimit: 4,
-  host: 'sql8.freemysqlhosting.net',
-  user: 'sql8528599',
-  password: 'SghmUiTYa4',
-  database: 'sql8528599',
-});
+/**
+ * A Database class that is contain initial connection to database.
+ */
+class Database {
+  query;
 
-pool.getConnection((err, connection) => {
-  if (err) throw err;
-  console.log('Database connected successfully');
-  connection.release();
-});
+  /**
+   * Initial database connection.
+   */
+  async initDatabase() {
+    const pool = createPool({
+      connectionLimit: 4,
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
+    });
 
-const query = util.promisify(pool.query).bind(pool);
+    const connection = await util.promisify(pool.getConnection).bind(pool)();
 
-export default { query };
+    console.log('Database connected successfully😎');
+    connection.release();
+    this.query = util.promisify(pool.query).bind(pool);
+  }
+}
+export default new Database();
