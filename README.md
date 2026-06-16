@@ -1,3 +1,4 @@
+[POS Dash.webm](https://github.com/user-attachments/assets/a747054f-09e5-47e7-a7a1-814e3357b564)
 # pos-task-api
 Create simple POS screen contain products and create invoice for them.
 
